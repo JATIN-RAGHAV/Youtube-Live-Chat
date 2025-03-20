@@ -1,0 +1,2 @@
+char *getCode();
+char *getUrl();

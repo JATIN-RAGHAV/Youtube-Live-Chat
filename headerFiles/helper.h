@@ -1,0 +1,1 @@
+void redirectUser(char *url);
