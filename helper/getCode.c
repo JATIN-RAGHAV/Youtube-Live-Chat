@@ -3,20 +3,26 @@
 #include <string.h>
 #include <unistd.h>
 #include "../headerFiles/https.h"
+#include "../headerFiles/read.h"
+#include "../headerFiles/joinStrings.h"
 
 #define TRUE 1
 #define FALSE 0
 
-char* parseCode(request rs);
+char* parseCode(data_t rs);
 void* getCode(void* codePtr){
-	request request = https();
+	data_t* request = server(NULL);
+	if(request == NULL){
+		printf("Some error happened with the server.\n");
+		return NULL;
+	}
 	void** code = codePtr;
-	*code = parseCode(request);
+	*code = parseCode(*request);
 	return NULL;
 }
 
 
-char* parseCode(request rs){
+char* parseCode(data_t rs){
 	int isCode = FALSE;
 	int index = 0;
 	char *code = (char*)malloc(300);
@@ -34,9 +40,15 @@ char* parseCode(request rs){
 }
 
 char* getUrl(){
-	char url[]= "'https://accounts.google.com/o/oauth2/v2/auth?client_id=45593217983-4972c1kfhct6cp4cg5sir6p7ts2hcidd.apps.googleusercontent.com&redirect_uri=https://jatinraghav.duckdns.org&response_type=code&scope=openid%20profile%20email'";
-	
-	char* urlHeap = (char*)malloc(sizeof(url)+1);
-	strcpy(urlHeap,url);
-	return urlHeap;
+	char* before = "'https://accounts.google.com/o/oauth2/v2/auth?client_id=";
+	char* after = "&redirect_uri=https://jatinraghav.duckdns.org&response_type=code&scope=openid%20profile%20email'";
+	char* client_id = readFile("./.clientId");
+	if(client_id == NULL){
+		printf("Couln't create url, envFile not read.\n");
+		return NULL;
+	}
+	char* strs[] = {before, client_id, after};
+	char* url = join(strs,3);
+	free(client_id);
+	return url;
 }

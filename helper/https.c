@@ -18,21 +18,29 @@
 typedef struct{
 	char *request;
 	int length;
-}request;
+}data_t;
 
+char* RESPONSE = NULL;
+char* REQUEST = NULL;
 
-request SSL_dynamic_read(SSL *ssl);
+data_t* SSL_dynamic_read(SSL *ssl);
 char isCompleteRequest(char *request, int length);
-request handleSSL(int *client_fd, SSL_CTX*);
-SSL_CTX *create_context();
-void configure_context(SSL_CTX *ctx);
+data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx);
+data_t* SSL_handle_client(int client_fd, SSL_CTX* ctx);
+data_t* get_client_request(SSL *ssl);
+data_t* get_server_response(SSL *ssl);
+SSL_CTX *create_server_context();
+SSL_CTX *create_client_context();
+void configure_server_context(SSL_CTX *ctx);
 void init_openssl();
 char *getResponse();
 
-request https(){
+data_t* server(char* response){
+	if(response != NULL)
+		RESPONSE = response;
 	init_openssl();
-	SSL_CTX *ctx = create_context();
-	configure_context(ctx);
+	SSL_CTX *ctx = create_server_context();
+	configure_server_context(ctx);
 	int server_fd, client_fd;
 
 	struct sockaddr_in6 server_addr, client_addr;
@@ -50,26 +58,96 @@ request https(){
 
 	if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
 		perror("Bind Failed\n");
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 	if(listen(server_fd, 10) <0){
 		perror("Listen Failed\n");
-		exit(EXIT_FAILURE);
+		return NULL;
 	}
 
 	client_fd = accept(server_fd, NULL, NULL);
 	if (client_fd < 0) {
 		perror("Accept failed");
+		return NULL;
 	}
-	request request =  handleSSL(&client_fd, ctx);
+	data_t* request =  SSL_handle_server(client_fd, ctx);
 	close(server_fd);
 	SSL_CTX_free(ctx);
 	EVP_cleanup();
 	return request;
 }
 
+data_t* client(char* request, char* server_domain){
+	init_openssl();
+	SSL_CTX *ctx = create_client_context();
+	int client_fd;
+	REQUEST = request;
 
-SSL_CTX *create_context() {
+	struct sockaddr_in6 server_addr ;
+
+	client_fd = socket(AF_INET6, SOCK_STREAM, 0);
+	if(client_fd  == -1){
+		perror("Server socket creation failed\n");
+		return NULL;
+	}
+
+	server_addr.sin6_family= AF_INET6;
+	server_addr.sin6_port = htons(PORT);
+	inet_pton(AF_INET6, server_domain, &server_addr.sin6_addr);
+
+	if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
+		perror("Connection failed from client side.");
+		exit(EXIT_FAILURE);
+	}
+
+	data_t* response = SSL_handle_client(client_fd, ctx);
+	close(client_fd);
+	SSL_CTX_free(ctx);
+	EVP_cleanup();
+	return response;
+}
+
+data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx){
+	SSL *ssl = SSL_new(ctx);
+	SSL_set_fd(ssl, client_fd);
+	data_t* request;
+	if(SSL_accept(ssl) <= 0) {
+		printf("SSL connection failed");
+		return NULL;
+	} else {
+		request= get_client_request(ssl);
+	}
+	close(client_fd);
+	return request;
+}
+
+data_t* get_server_response(SSL *ssl) {
+	if(SSL_write(ssl, REQUEST ,sizeof(RESPONSE)) < 0){
+		perror("Couln't sent response\n");
+	}
+	data_t* response = SSL_dynamic_read(ssl);
+	printf("\a");
+	SSL_shutdown(ssl);
+	SSL_free(ssl);
+	return response;
+}
+
+data_t* SSL_handle_client(int client_fd, SSL_CTX* ctx){
+	SSL *ssl = SSL_new(ctx);
+	SSL_set_fd(ssl, client_fd);
+	data_t* response;
+	if(SSL_connect(ssl) <= 0) {
+		ERR_print_errors_fp(stderr);
+	} else {
+		response = get_server_response(ssl);
+	}
+
+	close(client_fd);
+	return response;
+
+}
+
+SSL_CTX *create_server_context() {
 	SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
 	if (!ctx) {
 		perror("Unable to create SSL context");
@@ -79,7 +157,17 @@ SSL_CTX *create_context() {
 	return ctx;
 }
 
-void configure_context(SSL_CTX *ctx) {
+SSL_CTX *create_client_context() {
+	SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+	if (!ctx) {
+		perror("Unable to create SSL context");
+		ERR_print_errors_fp(stderr);
+		exit(EXIT_FAILURE);
+	}
+	return ctx;
+}
+
+void configure_server_context(SSL_CTX *ctx) {
 	if (SSL_CTX_use_certificate_file(ctx, CERT_FILE, SSL_FILETYPE_PEM) <= 0) {
 		ERR_print_errors_fp(stderr);
 		exit(EXIT_FAILURE);
@@ -90,11 +178,12 @@ void configure_context(SSL_CTX *ctx) {
 	}
 }
 
-request handle_client(SSL *ssl) {
-	request request = SSL_dynamic_read(ssl);
+data_t* get_client_request(SSL *ssl) {
+	data_t* request = SSL_dynamic_read(ssl);
 	printf("\a");
-	char* response = getResponse();
-	if(SSL_write(ssl, response,sizeof(response)) < 0){
+	if (RESPONSE == NULL)
+		RESPONSE = getResponse();
+	if(SSL_write(ssl, RESPONSE ,sizeof(RESPONSE)) < 0){
 		perror("Couln't sent response\n");
 	}
 	SSL_shutdown(ssl);
@@ -137,46 +226,32 @@ char *getResponse(){
 	return response;
 }
 
-request handleSSL(int *client_fd, SSL_CTX* ctx){
-	int clientD = *client_fd;
-	SSL *ssl = SSL_new(ctx);
-	SSL_set_fd(ssl, clientD);
-        request request;
-	if(SSL_accept(ssl) <= 0) {
-		ERR_print_errors_fp(stderr);
-	} else {
-		request = handle_client(ssl);
-	}
-
-	close(clientD);
-	return request;
-
-}
-
-request SSL_dynamic_read(SSL *ssl) {
-	char *data = NULL;
+data_t* SSL_dynamic_read(SSL *ssl) {
+	char *received= NULL;
 	char buffer[BUFFERSIZE];
 	size_t totalSize = 0;
 	int receivedBytes;
 
 	while ((receivedBytes = SSL_read(ssl, buffer, BUFFERSIZE)) > 0) {
-		char *newData = realloc(data, totalSize + receivedBytes + 1);
-		if (!newData) {
-			free(data);
+		char *newdata_t = realloc(received, totalSize + receivedBytes + 1);
+		if (!newdata_t) {
+			free(received);
 			perror("Memory allocation failed");
-			request err = {NULL, 0};
-			return err;
+			data_t err = {NULL, 0};
+			return NULL;
 		}
 
-		data = newData;
-		memcpy(data + totalSize, buffer, receivedBytes);
+		received = newdata_t;
+		memcpy(received + totalSize, buffer, receivedBytes);
 		totalSize += receivedBytes;
-		data[totalSize] = 0; 
-		int isComplete = isCompleteRequest(data, totalSize);
+		received[totalSize] = 0; 
+		int isComplete = isCompleteRequest(received, totalSize);
 		if(isComplete == TRUE)
 			break;
 	}
-	request req = {data, totalSize};
+	data_t* req = (data_t*)malloc(sizeof(data_t));
+	req->request = received;
+	req->length = totalSize;
 	return req;
 }
 
