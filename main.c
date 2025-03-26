@@ -64,7 +64,6 @@ int main(){
 			exit(1);
 		}
 	}
-	printf("STREAM ID: %s\n",live_chat_id);
 	fetchMessages(access_token, live_chat_id);
 	free(refresh_token);
 }

@@ -1,11 +1,3 @@
-// curl \
-//  'https://youtube.googleapis.com/youtube/v3/liveBroadcasts?part=snippet&broadcastStatus=active&key=AIzaSyDGhMx8Y55cS_deD2B8kd1DhL10aM747FQ' \
-//  --header 'Authorization: Bearer ya29.a0AeXRPp5PkGFLPdxngYUvo-rury310VwjOtPtb-In6JKxo3XF-iTOAx3FVghPD3meMajO1D_qHB1k0EsOPOq4YMnSrGUKIhYLHCvplMZ8fHEQHpwJF9HEQne2HNNLv8kI73cXNEQ5goAqp1TskZqb5Vqy2P8fLNg6ruO8Ac_0mwaCgYKAd4SARESFQHGX2MiTylANamt7wKF8cx6-cuSzQ0177' \
-//  --header 'Accept: application/json' \
-//  --compressed
-//
-//
-
 #include "../headerFiles/helper.h"
 #include "../headerFiles/joinStrings.h"
 #include "../headerFiles/https.h"
@@ -41,7 +33,7 @@ char* fetchLiveStreamId(char* token){
     }
     if(live_chat_id[0] == 'e' && live_chat_id[1] == 0){
         printf("No current Live Stream\n");
-        return NULL;
+        exit(0);
     }
 
     return live_chat_id;

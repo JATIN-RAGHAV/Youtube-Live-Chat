@@ -39,6 +39,7 @@ void fetchMessages(char* token, char* live_chat_id){
     chats* chats = parse_get_messages(response->request);
     char* nextPageToken;
 
+    printf("Live Chats Below\n\n");
     if(chats == NULL){
         printf("Couln't get chats\n");
     }

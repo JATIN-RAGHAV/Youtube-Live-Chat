@@ -152,7 +152,6 @@ data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx){
 		printf("SSL connection failed");
 		return NULL;
 	} else {
-		printf("Connection accepted\n");
 		request= get_client_request(ssl);
 	}
 	close(client_fd);
