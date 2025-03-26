@@ -42,20 +42,30 @@ int main(){
 		refresh_token = tokens[1];
 	}
 
-	printf("REFRESH TOKEN: %s\n",refresh_token);
+	access_token = get_access_token();
 	if(access_token == NULL){
 		access_token = fetchAccessToken(refresh_token);
 	}
-	printf("ACCESS TOKEN: %s\n",access_token);
-	free(refresh_token);
-
-	putchar(10);
-	char* live_chat_id = fetchLiveStreamId(access_token);
-	if(live_chat_id == NULL){
-		printf("Couldn't get live chat id\n");
+	char* tokens[2] = {access_token,refresh_token};
+	if(save_tokens(tokens) == 0){
+		printf("Couln't save tokens");
 		exit(1);
 	}
-	printf("LIVE CHAT ID: %s\n",live_chat_id);
+	free(refresh_token);
 
-
+	char* live_chat_id = fetchLiveStreamId(access_token);
+	if(live_chat_id == NULL){
+		access_token = fetchAccessToken(refresh_token);
+		tokens[0] = access_token;
+		if(save_tokens(tokens) == 0){
+			printf("Couln't save tokens");
+			exit(1);
+		}
+		live_chat_id = fetchLiveStreamId(access_token);
+		if(live_chat_id == NULL){
+			printf("Couldn't get live chat id");
+			exit(1);
+		}
+	}
+	fetchMessages(access_token, live_chat_id);
 }

@@ -35,8 +35,6 @@ char** fetchToken(char* code){
         printf("Couln't parse tokens\n");
         return NULL;
     }
-    char* accesss_token = tokens[0];
-    char* refresh_token = tokens[1];
     return tokens;
 
 }

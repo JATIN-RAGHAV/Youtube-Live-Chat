@@ -67,3 +67,25 @@ char* get_refresh_token(){
     fclose(file);
     return buffer;
 }
+
+char* get_access_token(){
+    FILE* file = fopen("./.access_token.txt","r");
+    if(file == NULL){
+        printf("Coldn't open file ./.access_token.txt\n");
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int len = ftell(file);
+    rewind(file);
+    char* buffer = (char*)malloc(len+1);
+    if(buffer == NULL){
+        printf("Coulnt get enough space to store access token\n");
+        return NULL;
+    }
+
+    fread(buffer,1,len,file);
+    buffer[len] = 0;
+    fclose(file);
+    return buffer;
+}
