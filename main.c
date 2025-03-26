@@ -15,7 +15,6 @@ int main(){
 	char* refresh_token = get_refresh_token();
 	char* access_token = NULL;
 	if(refresh_token == NULL || strlen(refresh_token) == 0){
-		printf("Couln't load refresh token\n");
 		printf("The user has to relogin\n");
 		pthread_t codeThread;
 		char*code = NULL;
@@ -31,7 +30,6 @@ int main(){
 			printf("Didn't get code.\n");
 			exit(1);
 		}
-		printf("Code: %s\n",code);
 		char** tokens = fetchToken(code);
 
 		if(save_tokens(tokens) == 0){
@@ -46,12 +44,11 @@ int main(){
 	if(access_token == NULL){
 		access_token = fetchAccessToken(refresh_token);
 	}
-	char* tokens[2] = {access_token,refresh_token};
+	char* tokens[] = {access_token,refresh_token};
 	if(save_tokens(tokens) == 0){
 		printf("Couln't save tokens");
 		exit(1);
 	}
-	free(refresh_token);
 
 	char* live_chat_id = fetchLiveStreamId(access_token);
 	if(live_chat_id == NULL){
@@ -68,4 +65,5 @@ int main(){
 		}
 	}
 	fetchMessages(access_token, live_chat_id);
+	free(refresh_token);
 }
