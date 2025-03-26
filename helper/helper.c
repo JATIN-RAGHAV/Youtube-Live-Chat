@@ -1,6 +1,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 void redirectUser(char *url){
     char cmd[] = "open ";
@@ -12,4 +13,57 @@ void redirectUser(char *url){
     strcpy(command, cmd);
     strcpy(&command[sizeof(cmd)-1], url);
     system(command);
+}
+
+char* itoa(int x){
+    char* num = (char*)malloc(10);
+    num[9] = 0;
+    int index = 8;
+    while(x>0){
+        num[index--] = x%10 + '0';
+        x = (int)(x/10);
+    }
+    return &num[index+1];
+}
+
+char save_tokens(char** tokens){
+    FILE* file = fopen("./.access_token.txt","w");
+    if(file == NULL){
+        printf("Couldn't read ./.access_token.txt\n");
+        return 0;
+    }
+    fprintf(file, "%s",tokens[0]);
+    fclose(file);
+
+    file = fopen("./.refresh_token.txt","w");
+    if(file == NULL){
+        printf("Couldn't read ./.refresh_token.txt\n");
+        return 0;
+    }
+    fprintf(file, "%s",tokens[1]);
+    fclose(file);
+
+    return 1;
+}
+
+char* get_refresh_token(){
+    FILE* file = fopen("./.refresh_token.txt","r");
+    if(file == NULL){
+        printf("Coldn't open file ./.refresh_token.txt\n");
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int len = ftell(file);
+    rewind(file);
+    char* buffer = (char*)malloc(len+1);
+    if(buffer == NULL){
+        printf("Coulnt get enough space to store refresh token\n");
+        return NULL;
+    }
+
+    fread(buffer,1,len,file);
+    buffer[len] = 0;
+    fclose(file);
+    return buffer;
 }

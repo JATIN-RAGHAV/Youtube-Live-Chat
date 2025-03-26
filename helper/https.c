@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <netdb.h>
 #include "../headerFiles/cJSON.h"
 
 #define PORT 443  // Use 443 for production
@@ -23,8 +24,10 @@ typedef struct{
 char* RESPONSE = NULL;
 char* REQUEST = NULL;
 
-data_t* SSL_dynamic_read(SSL *ssl);
-char isCompleteRequest(char *request, int length);
+data_t* SSL_dynamic_read_request(SSL *ssl);
+data_t* SSL_dynamic_read_response(SSL *ssl);
+char is_complete_request(char *request, int length);
+char is_complete_response(char *request, int length);
 data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx);
 data_t* SSL_handle_client(int client_fd, SSL_CTX* ctx);
 data_t* get_client_request(SSL *ssl);
@@ -83,49 +86,46 @@ data_t* client(char* request, char* server_domain){
 	int client_fd;
 	REQUEST = request;
 
+	struct addrinfo hints, *res;
 	struct sockaddr_in6 server_addr ;
 
 	client_fd = socket(AF_INET6, SOCK_STREAM, 0);
-	if(client_fd  == -1){
+	if(client_fd < 0){
 		perror("Server socket creation failed\n");
 		return NULL;
 	}
+	char ipstr[INET6_ADDRSTRLEN];
 
-	server_addr.sin6_family= AF_INET6;
-	server_addr.sin6_port = htons(PORT);
-	inet_pton(AF_INET6, server_domain, &server_addr.sin6_addr);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET6;
+	hints.ai_socktype = SOCK_STREAM;
 
-	if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
-		perror("Connection failed from client side.");
-		exit(EXIT_FAILURE);
+	if (getaddrinfo(server_domain, NULL, &hints, &res) != 0) {
+		perror("getaddrinfo\n");
+		return NULL;
 	}
 
+	server_addr = *(struct sockaddr_in6 *)res->ai_addr;
+	server_addr.sin6_family = AF_INET6;
+	server_addr.sin6_port = htons(PORT);
+	inet_ntop(AF_INET6, &server_addr.sin6_addr, ipstr, sizeof ipstr);
+	if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
+		perror("Connection failed from client side.\n");
+		return NULL;
+	}
 	data_t* response = SSL_handle_client(client_fd, ctx);
 	close(client_fd);
 	SSL_CTX_free(ctx);
 	EVP_cleanup();
+	freeaddrinfo(res);
 	return response;
 }
 
-data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx){
-	SSL *ssl = SSL_new(ctx);
-	SSL_set_fd(ssl, client_fd);
-	data_t* request;
-	if(SSL_accept(ssl) <= 0) {
-		printf("SSL connection failed");
-		return NULL;
-	} else {
-		request= get_client_request(ssl);
-	}
-	close(client_fd);
-	return request;
-}
-
 data_t* get_server_response(SSL *ssl) {
-	if(SSL_write(ssl, REQUEST ,sizeof(RESPONSE)) < 0){
+	if(SSL_write(ssl, REQUEST ,strlen(REQUEST)) < 0){
 		perror("Couln't sent response\n");
 	}
-	data_t* response = SSL_dynamic_read(ssl);
+	data_t* response = SSL_dynamic_read_response(ssl);
 	printf("\a");
 	SSL_shutdown(ssl);
 	SSL_free(ssl);
@@ -141,11 +141,24 @@ data_t* SSL_handle_client(int client_fd, SSL_CTX* ctx){
 	} else {
 		response = get_server_response(ssl);
 	}
-
 	close(client_fd);
 	return response;
-
 }
+data_t* SSL_handle_server(int client_fd, SSL_CTX* ctx){
+	SSL *ssl = SSL_new(ctx);
+	SSL_set_fd(ssl, client_fd);
+	data_t* request;
+	if(SSL_accept(ssl) <= 0) {
+		printf("SSL connection failed");
+		return NULL;
+	} else {
+		printf("Connection accepted\n");
+		request= get_client_request(ssl);
+	}
+	close(client_fd);
+	return request;
+}
+
 
 SSL_CTX *create_server_context() {
 	SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
@@ -179,7 +192,7 @@ void configure_server_context(SSL_CTX *ctx) {
 }
 
 data_t* get_client_request(SSL *ssl) {
-	data_t* request = SSL_dynamic_read(ssl);
+	data_t* request = SSL_dynamic_read_request(ssl);
 	printf("\a");
 	if (RESPONSE == NULL)
 		RESPONSE = getResponse();
@@ -225,8 +238,7 @@ char *getResponse(){
 	cJSON_Delete(body);
 	return response;
 }
-
-data_t* SSL_dynamic_read(SSL *ssl) {
+data_t* SSL_dynamic_read_request(SSL *ssl) {
 	char *received= NULL;
 	char buffer[BUFFERSIZE];
 	size_t totalSize = 0;
@@ -245,7 +257,7 @@ data_t* SSL_dynamic_read(SSL *ssl) {
 		memcpy(received + totalSize, buffer, receivedBytes);
 		totalSize += receivedBytes;
 		received[totalSize] = 0; 
-		int isComplete = isCompleteRequest(received, totalSize);
+		int isComplete = is_complete_request(received, totalSize);
 		if(isComplete == TRUE)
 			break;
 	}
@@ -255,7 +267,59 @@ data_t* SSL_dynamic_read(SSL *ssl) {
 	return req;
 }
 
-char isCompleteRequest(char *request, int length){
+data_t* SSL_dynamic_read_response(SSL *ssl) {
+	char *received= NULL;
+	char buffer[BUFFERSIZE];
+	size_t totalSize = 0;
+	int receivedBytes;
+
+	while ((receivedBytes = SSL_read(ssl, buffer, BUFFERSIZE)) > 0) {
+		char *newdata_t = realloc(received, totalSize + receivedBytes + 1);
+		if (!newdata_t) {
+			free(received);
+			perror("Memory allocation failed");
+			data_t err = {NULL, 0};
+			return NULL;
+		}
+
+		received = newdata_t;
+		memcpy(received + totalSize, buffer, receivedBytes);
+		totalSize += receivedBytes;
+		received[totalSize] = 0; 
+		int isComplete = is_complete_response(received, totalSize);
+		if(isComplete == TRUE)
+			break;
+	}
+	data_t* req = (data_t*)malloc(sizeof(data_t));
+	req->request = received;
+	req->length = totalSize;
+	return req;
+}
+
+char is_complete_response(char *request, int length){
+	for(int i = 0;i < length; i++){
+		if(request[i] == '\r'){
+			if(i+3<length && strncmp(&request[i],"\r\n\r\n",4) == 0){
+				i += 3;
+				char hexLen[10];
+				int index = 0;
+				while(request[i] != '\r')
+					hexLen[index++] = request[i++];
+				i += 2;
+				hexLen[index] = 0;
+				int body_length = (int)strtol(hexLen, NULL, 16);
+				if(body_length <= length - i){
+					return TRUE;
+				}
+				else
+					return FALSE;
+			}
+		}
+	}
+	return FALSE;
+
+}
+char is_complete_request(char *request, int length){
 	int contentCompareLength = 15;
 	for(int i = 0;i<length; i++){
 		if(request[i] == '\n'){

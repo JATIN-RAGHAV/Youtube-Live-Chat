@@ -10,7 +10,7 @@
 #define FALSE 0
 
 char* parseCode(data_t rs);
-void* getCode(void* codePtr){
+void* fetchCode(void* codePtr){
 	data_t* request = server(NULL);
 	if(request == NULL){
 		printf("Some error happened with the server.\n");
@@ -26,13 +26,14 @@ char* parseCode(data_t rs){
 	int isCode = FALSE;
 	int index = 0;
 	char *code = (char*)malloc(300);
-	for(int i = 0;i<rs.length;i++){
+	for(int i = 0;i<rs.length && rs.request[i] != '\n';i++){
 		if(rs.request[i] == '=')
 			isCode = TRUE;
 		else if(isCode == TRUE){
 			for(;rs.request[i] != '&' ;i++)
 				code[index++] = rs.request[i];
 			code[index] = 0;
+			code[1] = '/';
 			return code;
 		}
 	}
@@ -41,7 +42,7 @@ char* parseCode(data_t rs){
 
 char* getUrl(){
 	char* before = "'https://accounts.google.com/o/oauth2/v2/auth?client_id=";
-	char* after = "&redirect_uri=https://jatinraghav.duckdns.org&response_type=code&scope=openid%20profile%20email'";
+	char* after = "&redirect_uri=https://jatinraghav.duckdns.org&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.channel-memberships.creator%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.force-ssl%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.upload%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutubepartner&access_type=offline'";
 	char* client_id = readFile("./.clientId");
 	if(client_id == NULL){
 		printf("Couln't create url, envFile not read.\n");
