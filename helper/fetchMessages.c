@@ -5,6 +5,9 @@
 #include "../headerFiles/cJSON.h"
 #include <stdlib.h>
 #include <string.h>
+#include "unistd.h"
+
+#define POLING_TIME 5
 
 typedef struct {
     char* name;
@@ -13,16 +16,17 @@ typedef struct {
 
 typedef struct {
     message* chats;
+    char* nextPageToken;
     int len;
 }chats;
 
 static char* SERVER_DOMAIN = "https://youtube.googleapis.com";
 chats* parse_get_messages(char* response);
-
-char* getMessageRequest(char* token,char* live_chat_id );
+char* getNextMessageRequest(char* token,char* live_chat_id ,char* next_token);
+char* getFirstMessageRequest(char* token,char* live_chat_id );
 
 void fetchMessages(char* token, char* live_chat_id){
-    char* request = getMessageRequest(token, live_chat_id);
+    char* request = getFirstMessageRequest(token, live_chat_id);
     if(request == NULL){
         printf("Couldn't generate request to get messages\n");
     }
@@ -33,7 +37,8 @@ void fetchMessages(char* token, char* live_chat_id){
     }
 
     chats* chats = parse_get_messages(response->request);
-    
+    char* nextPageToken;
+
     if(chats == NULL){
         printf("Couln't get chats\n");
     }
@@ -43,6 +48,36 @@ void fetchMessages(char* token, char* live_chat_id){
     for(int i = 0;i<chats->len;i++){
         printf("%s:  %s\n",chats->chats[i].name, chats->chats[i].msg);
     }
+    nextPageToken = chats->nextPageToken;
+    free(chats);
+
+    while(1){
+        request = getNextMessageRequest(token, live_chat_id, nextPageToken);
+        if(request == NULL){
+            printf("Couln't get new request");
+            break;
+        }
+
+        response = client(request, SERVER_DOMAIN);
+        if(response == NULL){
+            printf("Couln't get response from server to fetch messages\n");
+        }
+
+        chats = parse_get_messages(response->request);
+        if(chats == NULL){
+            printf("Couln't get chats\n");
+        }
+        else if(chats->len != 0){
+            for(int i = 0;i<chats->len;i++){
+                printf("%s:  %s\n",chats->chats[i].name, chats->chats[i].msg);
+            }
+        }
+        nextPageToken = chats->nextPageToken;
+        free(chats);
+        sleep(POLING_TIME);
+    }
+
+    printf("Next Page Token: %s\n",chats->nextPageToken);
 
 }
 
@@ -58,14 +93,15 @@ chats* parse_get_messages(char* response){
         return NULL;
     }
 
-
-
     cJSON* items;
     int msgIndex = 0;
     message* messages;
     chats* ans = (chats*)malloc(sizeof(chats));
     cJSON_ArrayForEach(items, obj){
-        if(strcmp(items->string, "items") == 0){
+        if(strcmp(items->string, "nextPageToken") == 0){
+            ans->nextPageToken = items->valuestring;
+        }
+        else if(strcmp(items->string, "items") == 0){
             int messages_count = cJSON_GetArraySize(items);
             if(messages_count == 0){
                 ans->len = 0;
@@ -106,14 +142,37 @@ chats* parse_get_messages(char* response){
     return ans;
 }
 
-char* getMessageRequest(char* token,char* live_chat_id ){
+char* getFirstMessageRequest(char* token,char* live_chat_id ){
     char* clientId = readFile("./.clientId");
     if(clientId == NULL){
         printf("Couln't read client id");
         return NULL;
     }
-    char* request_line_array[] = {"GET /youtube/v3/liveChat/messages?part=snippet,authorDetails&fields=items(snippet(displayMessage),authorDetails(displayName))&liveChatId=",live_chat_id,"&key=",clientId," HTTP/1.1\r\n"};
+    char* request_line_array[] = {"GET /youtube/v3/liveChat/messages?part=snippet,authorDetails&fields=nextPageToken,items(snippet(displayMessage),authorDetails(displayName))&liveChatId=",live_chat_id,"&key=",clientId," HTTP/1.1\r\n"};
     char* request_line = join(request_line_array,5);
+
+    char* header_auth_less = "Host: youtube.googleapis.com\r\n"
+                    "Accept: application/json\r\n"
+                    "Content-Type: application/x-www-form-urlencoded\r\n"
+                    "Authorization: Bearer ";
+    char* header_list[] = {request_line,header_auth_less,token,"\r\n\r\n"};
+    char* header_auth_full = join(header_list, 4);
+    if(header_auth_full == NULL){
+        printf("Couln't create live id getter header\n");
+        return NULL;
+    }
+
+    return header_auth_full;
+}
+
+char* getNextMessageRequest(char* token,char* live_chat_id ,char* next_token){
+    char* clientId = readFile("./.clientId");
+    if(clientId == NULL){
+        printf("Couln't read client id");
+        return NULL;
+    }
+    char* request_line_array[] = {"GET /youtube/v3/liveChat/messages?part=snippet,authorDetails&fields=nextPageToken,items(snippet(displayMessage),authorDetails(displayName))&pageToken=",next_token,"&liveChatId=",live_chat_id,"&key=",clientId," HTTP/1.1\r\n"};
+    char* request_line = join(request_line_array,7);
 
     char* header_auth_less = "Host: youtube.googleapis.com\r\n"
                     "Accept: application/json\r\n"
