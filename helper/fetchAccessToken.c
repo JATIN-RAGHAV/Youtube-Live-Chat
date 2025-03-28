@@ -1,8 +1,8 @@
-#include "../headerFiles/joinStrings.h"
-#include "../headerFiles/read.h"
-#include "../headerFiles/https.h"
-#include "../headerFiles/helper.h"
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/joinStrings.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/read.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/https.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/helper.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 #include <string.h>
 #include <stdatomic.h>
 #include <stdlib.h>
@@ -58,13 +58,13 @@ char* get_request(){
         "Content-Type: application/x-www-form-urlencoded\r\n"
         "Content-Length: ";
 
-    char* client_id = readFile("./.clientId");
+    char* client_id = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
     if(client_id == NULL){
         printf("Couln't make request to get access token\n");
         return NULL;
     }
 
-    char* client_secret = readFile("./.clientSecret");
+    char* client_secret = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientSecret");
     if(client_secret== NULL){
         printf("Couln't make request to get access token\n");
         return NULL;

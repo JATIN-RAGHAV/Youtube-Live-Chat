@@ -1,9 +1,9 @@
 #include "stdio.h"
-#include "../headerFiles/joinStrings.h"
-#include "../headerFiles/read.h"
-#include "../headerFiles/https.h"
-#include "../headerFiles/helper.h"
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/joinStrings.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/read.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/https.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/helper.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 #include "stdlib.h"
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -72,8 +72,8 @@ char* get_request_first(char* code){
         "Content-Length: ";
 
 
-    char* client_id = readFile("./.clientId");
-    char* client_secret = readFile("./.clientSecret");
+    char* client_id = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
+    char* client_secret = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientSecret");
     char* body_arr[] = {
         "grant_type=authorization_code&",
         "code=",code,"&",

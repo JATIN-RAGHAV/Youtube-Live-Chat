@@ -27,17 +27,17 @@ char* itoa(int x){
 }
 
 char save_tokens(char** tokens){
-    FILE* file = fopen("./.access_token.txt","w");
+    FILE* file = fopen("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.access_token.txt","w");
     if(file == NULL){
-        printf("Couldn't read ./.access_token.txt\n");
+        printf("Couldn't read /Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.access_token.txt\n");
         return 0;
     }
     fprintf(file, "%s",tokens[0]);
     fclose(file);
 
-    file = fopen("./.refresh_token.txt","w");
+    file = fopen("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.refresh_token.txt","w");
     if(file == NULL){
-        printf("Couldn't read ./.refresh_token.txt\n");
+        printf("Couldn't read /Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.refresh_token.txt\n");
         return 0;
     }
     fprintf(file, "%s",tokens[1]);
@@ -47,9 +47,9 @@ char save_tokens(char** tokens){
 }
 
 char* get_refresh_token(){
-    FILE* file = fopen("./.refresh_token.txt","r");
+    FILE* file = fopen("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.refresh_token.txt","r");
     if(file == NULL){
-        printf("Coldn't open file ./.refresh_token.txt\n");
+        printf("Coldn't open file /Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.refresh_token.txt\n");
         return NULL;
     }
 
@@ -69,9 +69,9 @@ char* get_refresh_token(){
 }
 
 char* get_access_token(){
-    FILE* file = fopen("./.access_token.txt","r");
+    FILE* file = fopen("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.access_token.txt","r");
     if(file == NULL){
-        printf("Coldn't open file ./.access_token.txt\n");
+        printf("Coldn't open file /Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.access_token.txt\n");
         return NULL;
     }
 

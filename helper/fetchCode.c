@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../headerFiles/https.h"
-#include "../headerFiles/read.h"
-#include "../headerFiles/joinStrings.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/https.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/read.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/joinStrings.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -43,7 +43,7 @@ char* parseCode(data_t rs){
 char* getUrl(){
 	char* before = "'https://accounts.google.com/o/oauth2/v2/auth?client_id=";
 	char* after = "&redirect_uri=https://jatinraghav.duckdns.org&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.channel-memberships.creator%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.force-ssl%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutube.upload%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fyoutubepartner&access_type=offline'";
-	char* client_id = readFile("./.clientId");
+	char* client_id = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
 	if(client_id == NULL){
 		printf("Couln't create url, envFile not read.\n");
 		return NULL;

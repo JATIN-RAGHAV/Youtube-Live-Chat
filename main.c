@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <string.h> 
 #include <stdlib.h>
-#include "./headerFiles/helper.h"
-#include "./headerFiles/fetchCode.h"
-#include "./headerFiles/fetchToken.h"
-#include "./headerFiles/fetchAccessToken.h"
-#include "./headerFiles/fetchLiveStream.h"
-#include "./headerFiles/fetchMessages.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/helper.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/fetchCode.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/fetchToken.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/fetchAccessToken.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/fetchLiveStream.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/fetchMessages.h"
 #include <pthread.h>
 
 int main(){

@@ -56,7 +56,7 @@
 #pragma GCC visibility pop
 #endif
 
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 
 /* define our own boolean type */
 #ifdef true

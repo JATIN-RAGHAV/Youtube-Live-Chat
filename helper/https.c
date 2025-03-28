@@ -7,7 +7,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <netdb.h>
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 
 #define PORT 443  // Use 443 for production
 #define CERT_FILE "/Users/jatinraghav/.acme.sh/jatinraghav.duckdns.org_ecc/fullchain.cer"

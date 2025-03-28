@@ -1,8 +1,8 @@
-#include "../headerFiles/read.h"
-#include "../headerFiles/joinStrings.h"
-#include "../headerFiles/https.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/read.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/joinStrings.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/https.h"
 #include <stdio.h>
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 #include <stdlib.h>
 #include <string.h>
 #include "unistd.h"
@@ -144,7 +144,7 @@ chats* parse_get_messages(char* response){
 }
 
 char* getFirstMessageRequest(char* token,char* live_chat_id ){
-    char* clientId = readFile("./.clientId");
+    char* clientId = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
     if(clientId == NULL){
         printf("Couln't read client id");
         return NULL;
@@ -167,7 +167,7 @@ char* getFirstMessageRequest(char* token,char* live_chat_id ){
 }
 
 char* getNextMessageRequest(char* token,char* live_chat_id ,char* next_token){
-    char* clientId = readFile("./.clientId");
+    char* clientId = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
     if(clientId == NULL){
         printf("Couln't read client id");
         return NULL;

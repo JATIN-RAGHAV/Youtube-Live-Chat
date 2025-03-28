@@ -1,8 +1,8 @@
-#include "../headerFiles/helper.h"
-#include "../headerFiles/joinStrings.h"
-#include "../headerFiles/https.h"
-#include "../headerFiles/read.h"
-#include "../headerFiles/cJSON.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/helper.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/joinStrings.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/https.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/read.h"
+#include "/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/headerFiles/cJSON.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,7 +77,7 @@ char* parse_live_id(data_t* response){
 }
 
 char* getLiveChatRequest(char* token){
-    char* clientId = readFile("./.clientId");
+    char* clientId = readFile("/Users/jatinraghav/Documents/programming/projects/youtubeStuff/liveChat/.clientId");
     if(clientId == NULL){
         printf("Coulnt' get client id\n");
         return NULL;
