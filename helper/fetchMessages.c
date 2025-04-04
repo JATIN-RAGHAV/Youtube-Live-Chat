@@ -39,12 +39,12 @@ void fetchMessages(char* token, char* live_chat_id){
     chats* chats = parse_get_messages(response->request);
     char* nextPageToken;
 
-    printf("Live Chats Below\n\n");
+    printf("\033[1;34mLive Chats Below\033[0m\n\n");
     if(chats == NULL){
-        printf("Couln't get chats\n");
+        printf("\033[1;34mCouln't get chats\033[0m\n");
     }
     else if(chats->len == 0){
-        printf("No chats yet\n");
+        printf("\033[1;34mNo chats yet\033[0m\n");
     }
     for(int i = 0;i<chats->len;i++){
         printf("%s:  %s\n",chats->chats[i].name, chats->chats[i].msg);
@@ -55,22 +55,22 @@ void fetchMessages(char* token, char* live_chat_id){
     while(1){
         request = getNextMessageRequest(token, live_chat_id, nextPageToken);
         if(request == NULL){
-            printf("Couln't get new request");
+            printf("\033[1;34mCouln't get new request\033[0m");
             break;
         }
 
         response = client(request, SERVER_DOMAIN);
         if(response == NULL){
-            printf("Couln't get response from server to fetch messages\n");
+            printf("\033[1;34mCouln't get response from server to fetch messages\033[0m\n");
         }
 
         chats = parse_get_messages(response->request);
         if(chats == NULL){
-            printf("Couln't get chats\n");
+            printf("\033[1;34mCouln't get chats\033[0m\n");
         }
         else if(chats->len != 0){
             for(int i = 0;i<chats->len;i++){
-                printf("%s:  %s\n",chats->chats[i].name, chats->chats[i].msg);
+                printf("\033[1;31m%s\033[0m:  \033[1;32m%s\033[0m\n",chats->chats[i].name, chats->chats[i].msg);
             }
         }
         nextPageToken = chats->nextPageToken;

@@ -32,7 +32,7 @@ char* fetchLiveStreamId(char* token){
         return NULL;
     }
     if(live_chat_id[0] == 'e' && live_chat_id[1] == 0){
-        printf("No current Live Stream\n");
+        printf("\033[1;31mNo current Live Stream\033[0m\n");
         exit(0);
     }
 
